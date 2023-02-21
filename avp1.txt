@@ -1,0 +1,67 @@
+########## IMPORTANDO DADOS
+
+library(haven)
+library(tidyverse)
+library(pastecs)
+library(knitr)
+library(viridis)
+library(hrbrthemes)
+
+
+
+##### IMPORTANDO DADOS
+dados_tabagismo <- read_sas("~/Pessoal/Bioestatística/exercicio_shhs_180321.sas7bdat", NULL)
+
+
+
+####### VISUALIZANDO OS DADOS
+kable(head(dados_tabagismo))
+
+
+##### SEPARANDO AS VARIÁVEIS NUMÉRICAS
+var_num <- dados_tabagismo %>% select(-c("smoking", "activity", "chd", "id"))
+
+
+#### DESCRITIVA
+aux <- stat.desc(var_num)
+
+aux <- aux[c(4, 5, 8, 9, 12:14), ]
+rownames(aux) <- c("Mínimo", "Máximo", "Mediana", "Média", "Variância", "Desvio Padrão", "Coeficiente de Variação")
+kable(aux, digits = 3, align = "c", caption = "Principais Estatísticas descritivas do banco de dados")
+
+
+aux2 <- gather(var_num)
+colnames(aux2) <- c("Variável", "Valor")
+
+# creating a plot
+ggplot(aux2) +
+  geom_boxplot(aes(x = Variável, y = Valor, colour = Variável)) +
+  facet_wrap(~Variável, scale = "free") +
+  ggtitle("Variáveis contínuas") +
+  theme_ipsum()
+
+
+
+
+
+
+##### TRANSFORMANDO AS VARIAVEIS EM CATEGORICAS
+var_cat <- c("smoking", "activity", "chd")
+
+aux1 <- dados_tabagismo %>% select(c(var_cat))
+
+aux1 <- lapply(aux1, function(x) as.factor(x))
+
+dados_tabagismo[, var_cat] <- aux1
+
+
+####### GRÁFICO VARIÁVEIS CATEGÓRICAS
+dados_tabagismo %>%
+  select("smoking", "activity", "chd") %>%
+  gather(key = "variavel", value = "valor", smoking, activity, chd) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = valor, fill = variavel)) +
+  scale_fill_viridis(discrete = T) +
+  ggtitle("Studying 4 species..") +
+  theme_ipsum() +
+  xlab("")

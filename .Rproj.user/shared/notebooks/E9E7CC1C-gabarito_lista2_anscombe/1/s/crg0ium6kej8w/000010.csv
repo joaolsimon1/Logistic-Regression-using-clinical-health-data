@@ -1,0 +1,3 @@
+"0","kable(dados, digits = 3, align = ""c"", caption = ""Banco de dados"")
+"
+"0","kable(dados, digits = 3, align = ""c"", caption = ""Banco de dados"")"

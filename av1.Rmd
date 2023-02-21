@@ -1,0 +1,40 @@
+---
+title: "BIOESTATÍSTICA - Avaliação Parcial 1"
+author:
+- "João Lucas Simon"
+- "Cartão UFRGS: 00324507"
+date: '14/02/2023'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r PACOTES, include=FALSE}
+library(haven)
+library(tidyverse)
+library(pastecs)
+library(knitr)
+library(viridis)
+library(hrbrthemes)
+```
+
+Os dados abaixo contém informações sobre variáveis potencialmente
+associadas à presença de doença cardiovascular DCV em homens adultos
+residentes em uma determinada comunidade.
+
+```{r echo=FALSE}
+kable(head(dados_tabagismo))
+```
+
+
+
+
+
+
+
+
+

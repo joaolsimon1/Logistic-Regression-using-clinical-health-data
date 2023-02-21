@@ -1,0 +1,300 @@
+---
+title: "Bioestatística - Avaliação 1"
+author:
+- "João Lucas Simon"
+- "Cartão UFRGS: 00324507"
+date: '18/02/2023'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+
+
+</br> </br>
+
+```{r include=FALSE}
+library(haven)
+library(tidyverse)
+library(pastecs)
+library(knitr)
+library(viridis)
+library(hrbrthemes)
+library(corrplot)
+library(RColorBrewer)
+```
+
+# Introdução
+
+Os dados utilizados contém informações sobre variáveis potencialmente
+associadas à presença de doença cardiovascular (DCV) em homens adultos
+residentes em uma determinada comunidade. O quadro abaixo descreve as
+variáveis disponíveis, contendo informações aferidas na linha de base do
+estudo, isto é, sem considerar o seguimento dos indivíduos ao longo do
+tempo.
+
+</br>
+
+<center>
+
+```{=html}
+<style scoped>
+table {
+  font-size: 10px;
+}
+</style>
+```
++---------------+-------------------------------------+
+| VARIÁVEL      | DESCRIÇÃO                           |
++===============+=====================================+
+| age           | Idade (anos)                        |
++---------------+-------------------------------------+
+| totchol       | Colesterol total (mmol/l)           |
++---------------+-------------------------------------+
+| bmi           | Índice de massa corporal ($kg/m^2$) |
++---------------+-------------------------------------+
+| systol        | Pressão arterial sistólica (mmHg)   |
++---------------+-------------------------------------+
+| smoking       | Categorias do tabagismo:            |
+|               |                                     |
+|               | -   1 = Nunca fumou                 |
+|               |                                     |
+|               | -   2 = Ex-tabagista                |
+|               |                                     |
+|               | -   3 = Tabagista                   |
++---------------+-------------------------------------+
+| activity      | Autorrelato do nível de atividade   |
+|               | física:                             |
+|               |                                     |
+|               | -   1 = Ativo                       |
+|               |                                     |
+|               | -   2 = Atividade média             |
+|               |                                     |
+|               | -   3 = Inativo                     |
++---------------+-------------------------------------+
+| chd           | Incidência de doença cardiovascular |
+|               | (DCV)                               |
+|               |                                     |
+|               | -   0 = Não                         |
+|               |                                     |
+|               | -   1 = Sim                         |
++---------------+-------------------------------------+
+
+</br>
+
+```{r include=FALSE}
+# IMPORTANDO OS DADOS
+dados_tabagismo <- read_sas("~/Pessoal/Bioestatística/exercicio_shhs_180321.sas7bdat", NULL)
+```
+
+```{r echo=FALSE}
+kable(head(dados_tabagismo), caption = "Visualização do banco de dados")
+```
+
+</br> </br>
+
+# Análise Descritiva
+
+A seguir, iremos realizar uma análise descritiva para uma melhor
+compreensão dos dados que estamos lidando. Iremos primeiro analisar as
+variáveis numéricas utilizando gráficos de box-plot, e as variáveis
+categóricas utilizando graficos de barra.
+
+### Variáveis numéricas
+
+As variáveis numericas presentes são: 'age', 'totchol', 'bmi' e
+'systol'.
+
+```{r}
+##### SEPARANDO AS VARIÁVEIS NUMÉRICAS
+var_num <- dados_tabagismo %>% select("age", "totchol", "bmi", "systol")
+
+
+#### DESCRITIVA
+aux <- stat.desc(var_num)
+
+aux <- aux[c(4, 5, 8, 9, 12:14), ]
+rownames(aux) <- c("Mínimo", "Máximo", "Mediana", "Média", "Variância", "Desvio Padrão", "Coeficiente de Variação")
+kable(aux, digits = 3, align = "c", caption = "Principais Estatísticas descritivas do banco de dados")
+```
+
+</br>
+
+Abaixo, conseguimos visualizar o gráfico box-plot de cada variável em
+sua própria escala.
+
+```{r warning=FALSE, fig.align='center', fig.dim=0.6}
+# creating a plot
+aux2 <- gather(var_num)
+colnames(aux2) <- c("Variável", "Valor")
+
+
+ggplot(aux2) +
+  geom_boxplot(aes(x = Variável, y = Valor, colour = Variável)) +
+  facet_wrap(~Variável, scale = "free") +
+  ggtitle("Variáveis numéricas") +
+  theme_ipsum()
+```
+
+### Variáveis categóricas
+
+As variáveis categóricas presentes são: 'smoking', 'activity' e 'age'.
+
+
+Abaixo, temos uma gráfico de barras em que conseguimos visualizar a
+frequência da cada resposta.
+
+```{r echo=FALSE, warning=FALSE, fig.align='center'}
+var_cat <- c("smoking", "activity", "chd")
+
+aux1 <- dados_tabagismo %>% select(c(var_cat))
+
+aux1 <- lapply(aux1, function(x) as.factor(x))
+
+aux1 <- as.data.frame(aux1)
+
+
+aux1 %>%
+  gather(key = "Variável", value = "Valor", smoking, activity, chd) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = Valor, fill = Variável)) +
+  facet_wrap(~Variável, scale = "free_x") +
+  scale_fill_viridis(discrete = T) +
+  ggtitle("Variáveis categóricas") +
+  theme_ipsum() +
+  xlab("")
+```
+
+<center>
+
+```{=html}
+<style scoped>
+table {
+  font-size: 10px;
+}
+</style>
+```
++---------------+-------------------------------------+
+| VARIÁVEL      | DESCRIÇÃO                           |
++===============+=====================================+
+| smoking       | Categorias do tabagismo:            |
+|               |                                     |
+|               | 1 = Nunca fumou                     |
+|               |                                     |
+|               | 2 = Ex-tabagista                    |
+|               |                                     |
+|               | 3 = Tabagista                       |
++---------------+-------------------------------------+
+| activity      | Autorrelato do nível de atividade   |
+|               | física:                             |
+|               |                                     |
+|               | 1 = Ativo                           |
+|               |                                     |
+|               | 2 = Atividade média                 |
+|               |                                     |
+|               | 3 = Inativo                         |
++---------------+-------------------------------------+
+| chd           | Incidência de doença cardiovascular |
+|               | (DCV)                               |
+|               |                                     |
+|               | 0 = Não                             |
+|               |                                     |
+|               | 1 = Sim                             |
++---------------+-------------------------------------+
+
+# Correlação entre as variáveis
+
+Podemos começar nossas análises explorando a associação entre as variáveis através da representação gráfica da matriz de correlações de Pearson
+
+
+```{r}
+M <- dados_tabagismo %>%
+  select(-c("id")) %>%
+  cor()
+
+corrplot(M, title = "Correlação entre as Variáveis", mar = c(0, 0, 2, 0), type = "full", order = "hclust", col = brewer.pal(n = 8, name = "GnBu"))
+```
+
+Podemos notar no gráfico (acima) que as variáveis preditoras não estão significativamente correlacionadas, o que nos dá indícios de que multicolinearidade não será um problema na parametrização dos nossos modelos.
+
+
+# Regressão Logística
+
+### Modelo 1
+
+```{r}
+dados_tabagismo[, var_cat] <- aux1 # deixando as variáveis categóricas como fator
+
+modelo1 <- glm(chd ~ totchol, family = binomial(logit), data = dados_tabagismo)
+summary(modelo1)
+```
+
+
+
+
+### Modelo 2
+
+```{r}
+modelo2 <- glm(chd ~ totchol + age, family = binomial(logit), data = dados_tabagismo)
+summary(modelo2)
+```
+
+
+```{r}
+anova(modelo1, modelo2, test = "Chisq") # teste da razão de verossimilhança entre dois modelos encaixados utilizando a distribuição Qui - Quadrado
+```
+
+### Modelo 3
+
+```{r}
+modelo3 <- glm(chd ~ totchol + age + systol + smoking + activity, family = binomial(logit), data = dados_tabagismo)
+summary(modelo3)
+```
+
+
+```{r}
+anova(modelo2, modelo3, test = "Chisq") # teste da razão de verossimilhança entre dois modelos encaixados utilizando a distribuição Qui - Quadrado
+```
+
+#### Modelo 3 com Interação
+
+```{r}
+modelo3_int <- glm(chd ~ totchol + age + systol + smoking + activity + totchol*systol, family = binomial(logit), data = dados_tabagismo)
+summary(modelo3_int)
+```
+
+
+```{r}
+anova(modelo3, modelo3_int, test = "Chisq") # teste da razão de verossimilhança entre dois modelos encaixados utilizando a distribuição Qui - Quadrado
+```
+
+
+
+#### Modelo 3 com a Variável Colesterol Categorizada
+
+```{r}
+quantis <- quantile(dados_tabagismo$totchol)
+
+dados_tabagismo$totchol_cat <- ifelse(dados_tabagismo$totchol <= quantis[2], 1,
+                                  ifelse(dados_tabagismo$totchol <= quantis[3], 2,
+                                    ifelse(dados_tabagismo$totchol <= quantis[4], 3, 4)
+                                  )
+                                )
+```
+
+
+
+
+
+
+
+
+
